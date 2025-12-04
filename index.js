@@ -32,7 +32,7 @@ app.use(express.static('public'));
 app.set("views",path.join(__dirname,"/views"));
 app.set('view engine' , 'ejs');
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: 'https://frontend-notes-2-ija5.onrender.com',
   credentials: true
 }));
 app.use(express.json());
