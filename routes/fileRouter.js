@@ -85,43 +85,66 @@ router.get("/view/:uuid", async (req, res) => {
 // Delete a single file
 router.delete("/delete/:uuid", verifyToken, async (req, res) => {
   try {
+    console.log('Delete request for UUID:', req.params.uuid);
+    console.log('User:', req.user);
+    
     const file = await File.findOne({ uuid: req.params.uuid });
     if (!file) {
+      console.log('File not found');
       return res.status(404).json({ error: 'File not found' });
     }
+
+    console.log('File found:', file.title);
 
     // Delete file from database
     await File.deleteOne({ uuid: req.params.uuid });
     
+    console.log('File deleted from database');
     res.status(200).json({ message: 'File deleted successfully' });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error deleting file' });
+    console.error('Delete error:', err);
+    res.status(500).json({ error: 'Error deleting file', details: err.message });
   }
 });
 
 // Delete entire folder (all files in a folder)
 router.delete("/delete-folder/:folderName", verifyToken, async (req, res) => {
   try {
-    const folderName = req.params.folderName;
+    const folderName = decodeURIComponent(req.params.folderName);
+    console.log('Delete folder request for:', folderName);
+    console.log('User:', req.user);
     
-    // Find all files in this folder
-    const files = await File.find({ folder: folderName });
+    // Find all files in this folder and subfolders
+    const files = await File.find({ 
+      $or: [
+        { folder: folderName },
+        { folder: { $regex: `^${folderName}/` } }
+      ]
+    });
     
     if (files.length === 0) {
+      console.log('Folder not found or empty');
       return res.status(404).json({ error: 'Folder not found or empty' });
     }
 
-    // Delete all files in the folder from database
-    await File.deleteMany({ folder: folderName });
+    console.log(`Found ${files.length} files to delete`);
+
+    // Delete all files in the folder and subfolders from database
+    await File.deleteMany({ 
+      $or: [
+        { folder: folderName },
+        { folder: { $regex: `^${folderName}/` } }
+      ]
+    });
     
+    console.log('Folder deleted successfully');
     res.status(200).json({ 
       message: 'Folder deleted successfully',
       deletedCount: files.length 
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error deleting folder' });
+    console.error('Delete folder error:', err);
+    res.status(500).json({ error: 'Error deleting folder', details: err.message });
   }
 });
 
