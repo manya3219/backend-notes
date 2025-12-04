@@ -56,6 +56,14 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// Add security headers for OAuth popup compatibility
+app.use((req, res, next) => {
+    // Allow cross-origin for OAuth popups
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
+    next();
+});
+
 app.use(express.json());
 app.use(cookieParser());
 app.listen(5000,()=>{
