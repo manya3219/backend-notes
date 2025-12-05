@@ -96,6 +96,23 @@ router.delete("/delete/:uuid", verifyToken, async (req, res) => {
 
     console.log('File found:', file.title);
 
+    // If file is on Cloudinary, delete from there too
+    if (file.image && file.image.includes('cloudinary')) {
+      try {
+        const { cloudinary } = await import('../config/cloudinary.js');
+        // Extract public_id from Cloudinary URL
+        const urlParts = file.image.split('/');
+        const publicIdWithExt = urlParts[urlParts.length - 1];
+        const publicId = `nexahub-files/${publicIdWithExt.split('.')[0]}`;
+        
+        await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
+        console.log('File deleted from Cloudinary');
+      } catch (cloudinaryErr) {
+        console.error('Cloudinary delete error:', cloudinaryErr);
+        // Continue even if Cloudinary delete fails
+      }
+    }
+
     // Delete file from database
     await File.deleteOne({ uuid: req.params.uuid });
     

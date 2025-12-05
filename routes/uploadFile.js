@@ -1,55 +1,43 @@
 import express from 'express';
-const router=express.Router();
+const router = express.Router();
 import File from '../models/file.js';
-
-
-import multer from 'multer';
-
-import path from 'path';
 import { v4 as uuid4 } from 'uuid';
+import { upload } from '../config/cloudinary.js';
 
+router.post('/', upload.single('myfile'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
 
-let storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, 'upload/') ,
-    filename: (req, file, cb) => {
-        const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${path.extname(file.originalname)}`;
-              cb(null, uniqueName)
-    } ,
+    console.log('Cloudinary upload result:', req.file);
+
+    // Create file document with Cloudinary URL
+    const file = new File({
+      filename: req.file.originalname,
+      title: req.body.title,
+      folder: req.body.folder || null,
+      uuid: uuid4(),
+      path: req.file.path, // Cloudinary URL
+      image: req.file.path, // Cloudinary URL for viewing
+      size: req.file.size || 0,
+    });
+
+    const response = await file.save();
+    
+    res.json({
+      success: true,
+      file: response,
+      message: 'File uploaded successfully to Cloudinary',
+      url: req.file.path
+    });
+  } catch (err) {
+    console.error('Upload error:', err);
+    res.status(500).json({ 
+      error: 'Error uploading file',
+      details: err.message 
+    });
+  }
 });
-
-let upload=multer({
-    storage  
-}).single('myfile');
-
-
-router.post('/', (req,res) => {
-   
-    //store files using upload folder
-    upload(req,res,async (err) => {
-            
-          if(err) { 
-            console.log("hi");
-            console.log(err)
-                return res.status(500).send({error:err.message});
-            }
-            //storing data into database of files --need model
-            console.log(req.file);
-            console.log(req.title);
-            const file=new File({
-            filename :req.file.filename,
-            title:req.body.title,
-            folder: req.body.folder || null,
-            uuid: uuid4(),
-            path:req.file.path,
-            size:req.file.size
-        });
-
-        const response=await file.save();
-        res.json({file: `${process.env.APP_BASE_URL}/files/${response.uuid}`});
-        });
-
-
-});
- 
 
 export default router;
