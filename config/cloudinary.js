@@ -16,6 +16,8 @@ const storage = new CloudinaryStorage({
     folder: 'nexahub-files', // Folder name in Cloudinary
     allowed_formats: ['pdf', 'doc', 'docx', 'txt', 'jpg', 'jpeg', 'png', 'gif', 'xlsx', 'ppt', 'pptx'],
     resource_type: 'auto', // Automatically detect file type
+    access_mode: 'public', // Make files publicly accessible
+    type: 'upload', // Upload type
   },
 });
 
