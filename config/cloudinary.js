@@ -12,12 +12,17 @@ cloudinary.config({
 // Configure Cloudinary storage for multer
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: {
-    folder: 'nexahub-files', // Folder name in Cloudinary
-    allowed_formats: ['pdf', 'doc', 'docx', 'txt', 'jpg', 'jpeg', 'png', 'gif', 'xlsx', 'ppt', 'pptx'],
-    resource_type: 'auto', // Automatically detect file type
-    access_mode: 'public', // Make files publicly accessible
-    type: 'upload', // Upload type
+  params: async (req, file) => {
+    // Determine resource type based on file mimetype
+    const isImage = file.mimetype.startsWith('image/');
+    const resourceType = isImage ? 'image' : 'raw';
+    
+    return {
+      folder: 'nexahub-files',
+      resource_type: resourceType, // 'raw' for PDFs/docs, 'image' for images
+      access_mode: 'public',
+      allowed_formats: ['pdf', 'doc', 'docx', 'txt', 'jpg', 'jpeg', 'png', 'gif', 'xlsx', 'ppt', 'pptx'],
+    };
   },
 });
 
