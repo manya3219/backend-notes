@@ -55,6 +55,13 @@ router.get("/view/:uuid", async (req, res) => {
       return res.status(404).json({ error: 'File not found' });
     }
     
+    // If file is on Cloudinary, redirect to Cloudinary URL with proper headers
+    if (file.image && file.image.includes('cloudinary')) {
+      // Just redirect to Cloudinary URL - browser will handle it
+      return res.redirect(file.image);
+    }
+    
+    // For local files
     const filePath = path.join(__dirname, '..', file.path);
     
     // Set content type based on file extension
