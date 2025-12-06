@@ -2,8 +2,6 @@ import express from 'express';
 const router = express.Router();
 import Playlist from '../models/Playlist.js';// Use import instead of require
 
-
-
 // Get all playlists
 router.get('/', async (req, res) => {
   const playlists = await Playlist.find();
@@ -12,15 +10,23 @@ router.get('/', async (req, res) => {
 
 // Create a new playlist
 router.post('/', async (req, res) => {
-  const { name, folder, description, videos } = req.body;
-  const newPlaylist = new Playlist({ 
-    name, 
-    folder, 
-    description, 
-    videos: videos || [] 
-  });
-  await newPlaylist.save();
-  res.json(newPlaylist);
+  try {
+    const { name, folder, description, videos } = req.body;
+    
+    const newPlaylist = new Playlist({ 
+      name, 
+      folder, 
+      description, 
+      videos: videos || [] 
+    });
+    
+    await newPlaylist.save();
+    
+    res.json(newPlaylist);
+  } catch (error) {
+    console.error('Error creating playlist:', error);
+    res.status(500).json({ error: 'Failed to create playlist', details: error.message });
+  }
 });
 
 // Add video to a playlist
