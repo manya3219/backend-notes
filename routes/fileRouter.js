@@ -100,11 +100,16 @@ router.get("/view/:uuid", async (req, res) => {
   }
 });
 
-// Delete a single file
+// Delete a single file (MongoDB only - no external storage)
 router.delete("/delete/:uuid", verifyToken, async (req, res) => {
   try {
     console.log('Delete request for UUID:', req.params.uuid);
     console.log('User:', req.user);
+    
+    // Check if user is admin
+    if (!req.user.isAdmin) {
+      return res.status(403).json({ error: 'Only admin can delete files' });
+    }
     
     const file = await File.findOne({ uuid: req.params.uuid });
     if (!file) {
@@ -114,31 +119,21 @@ router.delete("/delete/:uuid", verifyToken, async (req, res) => {
 
     console.log('File found:', file.title);
 
-    // If file is on Cloudinary, delete from there too
-    if (file.image && file.image.includes('cloudinary')) {
-      try {
-        const { cloudinary } = await import('../config/cloudinary.js');
-        // Extract public_id from Cloudinary URL
-        const urlParts = file.image.split('/');
-        const publicIdWithExt = urlParts[urlParts.length - 1];
-        const publicId = `nexahub-files/${publicIdWithExt.split('.')[0]}`;
-        
-        await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
-        console.log('File deleted from Cloudinary');
-      } catch (cloudinaryErr) {
-        console.error('Cloudinary delete error:', cloudinaryErr);
-        // Continue even if Cloudinary delete fails
-      }
-    }
-
-    // Delete file from database
+    // Delete file from database (file data is stored in MongoDB)
     await File.deleteOne({ uuid: req.params.uuid });
     
-    console.log('File deleted from database');
-    res.status(200).json({ message: 'File deleted successfully' });
+    console.log('File deleted from database successfully');
+    res.status(200).json({ 
+      success: true,
+      message: 'File deleted successfully' 
+    });
   } catch (err) {
     console.error('Delete error:', err);
-    res.status(500).json({ error: 'Error deleting file', details: err.message });
+    res.status(500).json({ 
+      success: false,
+      error: 'Error deleting file', 
+      details: err.message 
+    });
   }
 });
 
