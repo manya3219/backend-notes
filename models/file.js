@@ -17,6 +17,10 @@ const fileSchema = new Schema({
         default:"https://i.pinimg.com/736x/e0/1f/be/e01fbe4ca73cda13bdd58b321e3a3b77.jpg",
     },
     downloadLink: {String},
+    
+    // Google Drive specific fields
+    storageType: {type: String, enum: ['cloudinary', 'googledrive', 'local'], default: 'cloudinary'},
+    driveFileId: {type: String}, // Google Drive file ID for deletion
    
 },{timestamps:true}, );
 
