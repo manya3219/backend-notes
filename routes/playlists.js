@@ -13,6 +13,9 @@ router.post('/', async (req, res) => {
   try {
     const { name, folder, description, videos } = req.body;
     
+    // Log for debugging in production
+    console.log('Creating playlist:', { name, hasVideos: !!videos, videoCount: videos?.length });
+    
     const newPlaylist = new Playlist({ 
       name, 
       folder, 
@@ -22,10 +25,17 @@ router.post('/', async (req, res) => {
     
     await newPlaylist.save();
     
+    console.log('Playlist created successfully:', newPlaylist._id);
+    
     res.json(newPlaylist);
   } catch (error) {
     console.error('Error creating playlist:', error);
-    res.status(500).json({ error: 'Failed to create playlist', details: error.message });
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Failed to create playlist', 
+      message: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
