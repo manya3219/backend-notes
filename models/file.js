@@ -4,23 +4,21 @@ const Schema = mongoose.Schema;
 
 const fileSchema = new Schema({
     filename: {type:String,required: true},
-    
     path: {type:String, required: true},
     size: {type:Number, required: true},
     uuid: {type:String, required: true},
-    fileSize:{Number} ,
     title: {type:String,required: true},
     folder: {type:String, default: null},
     
+    // Store file data directly in MongoDB as Base64
+    fileData: {type: String}, // Base64 encoded file
+    mimeType: {type: String}, // e.g., 'application/pdf', 'image/jpeg'
+    
+    // Legacy field for old files
     image:{
         type:String,
         default:"https://i.pinimg.com/736x/e0/1f/be/e01fbe4ca73cda13bdd58b321e3a3b77.jpg",
     },
-    downloadLink: {String},
-    
-    // Google Drive specific fields
-    storageType: {type: String, enum: ['cloudinary', 'googledrive', 'local'], default: 'cloudinary'},
-    driveFileId: {type: String}, // Google Drive file ID for deletion
    
 },{timestamps:true}, );
 

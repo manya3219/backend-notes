@@ -47,7 +47,7 @@ router.get("/:uuid", async (req,res) =>{
   }
 });
 
-// View file inline (display in browser)
+// View file inline (display in browser) - Serve from MongoDB
 router.get("/view/:uuid", async (req, res) => {
   try {
     const file = await File.findOne({ uuid: req.params.uuid });
@@ -55,16 +55,27 @@ router.get("/view/:uuid", async (req, res) => {
       return res.status(404).json({ error: 'File not found' });
     }
     
-    // If file is on Cloudinary, redirect to Cloudinary URL with proper headers
+    // If file has Base64 data (stored in MongoDB)
+    if (file.fileData) {
+      // Convert Base64 back to Buffer
+      const fileBuffer = Buffer.from(file.fileData, 'base64');
+      
+      // Set proper headers
+      res.setHeader('Content-Type', file.mimeType || 'application/octet-stream');
+      res.setHeader('Content-Disposition', 'inline');
+      res.setHeader('Content-Length', fileBuffer.length);
+      
+      // Send file
+      return res.send(fileBuffer);
+    }
+    
+    // Legacy: If file is on Cloudinary
     if (file.image && file.image.includes('cloudinary')) {
-      // Just redirect to Cloudinary URL - browser will handle it
       return res.redirect(file.image);
     }
     
-    // For local files
+    // Legacy: For old local files
     const filePath = path.join(__dirname, '..', file.path);
-    
-    // Set content type based on file extension
     const ext = path.extname(file.filename).toLowerCase();
     const contentTypes = {
       '.pdf': 'application/pdf',
