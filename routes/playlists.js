@@ -12,8 +12,13 @@ router.get('/', async (req, res) => {
 
 // Create a new playlist
 router.post('/', async (req, res) => {
-  const { name, folder, description } = req.body;
-  const newPlaylist = new Playlist({ name, folder, description, videos: [] });
+  const { name, folder, description, videos } = req.body;
+  const newPlaylist = new Playlist({ 
+    name, 
+    folder, 
+    description, 
+    videos: videos || [] 
+  });
   await newPlaylist.save();
   res.json(newPlaylist);
 });
